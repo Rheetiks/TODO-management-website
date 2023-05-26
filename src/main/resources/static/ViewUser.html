@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <style>
+    .tb {
+      border-collapse: collapse;
+    }
+
+    .tb th,
+    .tb td {
+      padding: 5px;
+      border: solid 1px #777;
+    }
+
+    .tb th {
+      background-color: #04AA6D;
+    }
+
+    input[type=button] {
+      background-color: #4CAF50;
+      /* Green */
+      margin-top: 8px;
+      color: white;
+      padding: 10px 20px;
+      text-align: center;
+      text-decoration: none;
+      font-size: 16px;
+
+    }
+
+    input[type=button]:hover {
+      background-color: #79b07b;
+      /* Green */
+      border-radius: 6px;
+      color: white;
+      font-size: 15px;
+    }
+  </style>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+
+  <!-- <script src="ViewUser.js"></script> -->
+</head>
+
+<body>
+  <div class="topweb">
+    <div id="head">
+      <h1>WELCOME TO MY WEBPAGE</h1>
+    </div>
+  </div>
+  <table class="tb" style="width:650px;">
+    <thead>
+      <tr>
+
+        <th>TASK NO:</th>
+        <th>USER NO:</th>
+        <th>TODO TASK </th>
+        <th>ACTION</th>
+      </tr>
+    </thead>
+    <tbody id="userdata">
+
+    </tbody>
+  </table>
+  <script>
+    let input = {};
+    var que = window.location.search;
+    var urlParmsArr = new URLSearchParams(que);
+    input.userName = urlParmsArr.get('username');
+    input.userPassword = urlParmsArr.get('password');
+    // console.log(input.userName);
+    // console.log(input.userPassword);
+
+    console.log(input);
+    async function callApi() {
+      let result = await fetch('http://localhost:8087/login', {
+        method: 'POST',
+        headers: {
+          'content-Type': 'application/json'
+        },
+        body: JSON.stringify(input)
+      })
+      // result = await result.json();
+      console.log(result);
+
+      if (result.userId <= 0) {
+        window.location.href = 'index.html';
+
+      } else {
+        input.userName = urlParmsArr.get('username');
+        input.userPassword = urlParmsArr.get('password');
+        async function viewTask() {
+          let result = await fetch('http://localhost:8087/user/view', {
+            method: 'POST',
+            headers: {
+              'content-Type': 'application/json'
+            },
+            body: JSON.stringify(input)
+          })
+          result = await result.json();
+          console.log(result);
+
+          document.getElementById("userdata").innerHTML = result.map((user) =>
+            `<tr class ="but">
+              <td>${user.taskId}</td>
+              <td>${user.userId}</td>
+              <td>${user.taskName}</td>
+              <td><button type="submit" onclick="removeElem(${user.taskId}),removeRow(this)" value="submit">REMOVE</button></td>
+            </tr>`
+          ).join("");
+        }
+        viewTask();
+      }
+    }
+      callApi();
+
+
+
+
+      function removeElem(id) {
+        let input = {};
+        input.taskId = id;
+        async function callApi() {
+          let result = await fetch('http://localhost:8087/delete', {
+            method: 'POST',
+            headers: {
+              'content-Type': 'application/json'
+            },
+            body: JSON.stringify(input)
+          })
+
+        }
+        callApi();
+      }
+
+      function removeRow(e) {
+        let row = e.parentElement.parentElement;
+        row = row.remove();
+      }
+
+      function getTask(e) {
+        let input = {};
+        input.taskName = document.getElementById('taskName').value;
+        async function callApi() {
+          let result = await fetch('http://localhost:8087/add', {
+            method: 'POST',
+            headers: {
+              'content-Type': 'application/json'
+            },
+            body: JSON.stringify(input)
+          })
+
+          result = await result.json();
+          console.log(result);
+
+          document.getElementById("userdata").innerHTML = result.map((user) =>
+            `<tr class ="but">
+            <td>${user.taskId}</td>
+            <td>${user.userId}</td>
+            <td>${user.taskName}</td>
+            <td><button type="submit" onclick="removeElem(${user.taskId}),removeRow(this)" value="submit">REMOVE</button></td>
+          </tr>`
+          ).join("");
+
+        }
+        callApi();
+      }
+
+  </script>
+  <input type="text" id="taskName" placeholder="Add your new Todo Task" />
+  <button type="submit" onclick="getTask()" value="submit">ADD TASK</button>
+</body>
+
+</html>
